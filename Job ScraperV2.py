@@ -3,6 +3,25 @@ from playwright.sync_api import sync_playwright
 import requests
 import csv
 import sqlite3
+import time
+import random
+
+def smart_delay(self, base_delay=1, max_delay=3):
+      delay=random.uniform(base_delay, max_delay)
+      time.sleep(delay)
+      
+conn=sqlite3.connect("jobs.db")
+cur = conn.cursor()
+
+def save_jobs(title, company, salary, location, skills, link):
+      conn= sqlite3.connect("jobs.db")
+      cursor=conn.cursor()
+      cursor.execute("""
+        INSERT OR IGNORE INTO jobs (title, company, salary, location, skills, job_link)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (title, company, salary, location, skills, link))
+      conn.commit()
+      conn.close()
 
 with open("jobs.csv", "w", newline="", encoding="utf-8") as f:
       writer=csv.writer(f)
@@ -38,18 +57,21 @@ with open("jobs.csv", "w", newline="", encoding="utf-8") as f:
                                 skills = [skill.text.strip().lower() for skill in soup2.find_all("span", class_="round_tabs")]
                                 all = ", ".join(skills) if skills else "NoMentionedSkill"
 
+
                                 # ✅ Print (for debugging)
-                                print("Job Title:", job_title.text.strip())
-                                print("Hiring Company:", c_name)
-                                print("Salary:", sal)
-                                print("Skills Required:", all)
-                                print("Location(s):", location)
-                                print("Job Link:", js_url, "\n")
+                                #print("Hiring Company:", c_name)
+                                #print("Salary:", sal)
+                                #print("Skills Required:", all)
+                                #print("Location(s):", location)
+                                #print("Job Link:", js_url, "\n")
 
                                 # ✅ Write to CSV
                                 writer.writerow([job_title.text.strip().lower(), c_name.lower(), sal, location.lower(), all.lower(), js_url])
+                                save_jobs(job_title.text.strip(), c_name, sal, location, all, js_url)
+                                smart_delay
                                 c += 1
                             print(c)
                             browser.close()
+                            
                             
         
